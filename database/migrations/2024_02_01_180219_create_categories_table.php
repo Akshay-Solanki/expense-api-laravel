@@ -15,7 +15,7 @@ return new class extends Migration
             $table->ulid()->primary();
             $table->string('name',20);
             $table->string('type',20);
-            $table->foreignUlid('user_id');
+            $table->foreignUlid('user_ulid');
             $table->timestamps();
         });
     }

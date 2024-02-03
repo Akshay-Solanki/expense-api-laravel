@@ -25,7 +25,7 @@ Route::post('register', [RegisterController::class, 'register']);
 Route::post('login', [RegisterController::class, 'login']);
 
 Route::controller(CategoryController::class)->group(function () {
-    Route::middleware('auth:sactum')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::get('categories', 'index');
         Route::post('categories', 'store');
         Route::get('categories/{id}', 'show');
