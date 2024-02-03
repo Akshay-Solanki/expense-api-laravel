@@ -10,8 +10,9 @@ class Category extends Model
 {
     use HasFactory, HasUlids;
 
+    protected $primaryKey = 'ulid';
 
-    protected $fillables = [
+    protected $fillable = [
         'name',
         'type',
         'user_id'
