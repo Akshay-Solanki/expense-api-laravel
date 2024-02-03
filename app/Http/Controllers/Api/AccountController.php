@@ -1,20 +1,21 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Models\Category;
+use App\Http\Controllers\Controller;
+use App\Models\Account;
 use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-class CategoryController extends Controller
+class AccountController extends Controller
 {
     public function index(): JsonResponse
     {
         return response()->json([
             'message' => 'success',
-            'result' => Category::all()
+            'result' => Account::all()
         ]);
     }
 
@@ -24,18 +25,20 @@ class CategoryController extends Controller
         $request->validate([
             'name' => [
                 'required', 'string', 'min:2',
-                Rule::unique('categories')
+                Rule::unique('accounts')
                     ->where(fn (Builder $query) => $query->where('user_ulid', $request->user()->ulid))
             ],
-            'type' => 'required|in:INCOME,EXPENSE,TRANSFER'
+            'balance' => [
+                'required', 'numeric'
+            ]
         ]);
 
-        $category = $request->user()->categories()->create($request->only('name', 'type'));
+        $account = $request->user()->accounts()->create($request->only('name', 'balance'));
 
         return response()->json([
-            'message' => 'Category created successfully',
+            'message' => 'Account created successfully',
             'result' => [
-                'category' => $category
+                'account' => $account
             ]
         ]);
     }
@@ -43,17 +46,17 @@ class CategoryController extends Controller
     public function show(Request $request, string $ulid): JsonResponse
     {
 
-        if ($category = $request->user()->categories()->where('ulid', $ulid)->first()) {
+        if ($account = $request->user()->accounts()->where('ulid', $ulid)->first()) {
             return response()->json([
-                'message' => 'Category found',
+                'message' => 'Account found',
                 'result' => [
-                    'category' => $category
+                    'account' => $account
                 ]
 
             ]);
         }
         return response()->json([
-            'message' => 'Category not found',
+            'message' => 'Account not found',
             'result' => []
         ], 404);
     }
@@ -63,37 +66,40 @@ class CategoryController extends Controller
         $request->validate([
             'name' => [
                 'required', 'string', 'min:2',
-                Rule::unique('categories')
+                Rule::unique('accounts')
                     ->where(fn (Builder $query) => $query->where('user_ulid', $request->user()->ulid))
                     ->ignore($ulid, 'ulid')
             ],
+            'balance' => [
+                'numeric'
+            ]
         ]);
 
-        $category = $request->user()->categories()
+        $account = $request->user()->accounts()
             ->where('ulid', $ulid)->first();
 
-        tap($category)->update($request->only('name'));
+        tap($account)->update(array_filter($request->only('name', 'balance')));
 
         return response()->json([
-            'message' => 'Category updated successfully',
+            'message' => 'Account updated successfully',
             'result'  => [
-                'category' => $category
+                'account' => $account
             ]
         ]);
     }
 
 
-    public function destroy(string $ulid): JsonResponse
+    public function destroy(Request $request, string $ulid): JsonResponse
     {
 
-        if (Category::where('ulid', $ulid)->delete()) {
+        if ($request->user()->accounts()->where('ulid', $ulid)->delete()) {
             return response()->json([
-                'message' => 'Category delete successfully',
+                'message' => 'Account deleted successfully',
                 'result'  => []
             ]);
         }
         return response()->json([
-            'message' => 'Category not found',
+            'message' => 'Account not found',
             'result'  => []
         ], 404);
     }
