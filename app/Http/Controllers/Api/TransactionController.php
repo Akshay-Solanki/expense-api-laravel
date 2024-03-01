@@ -8,6 +8,7 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use mysql_xdevapi\Exception;
 
 class TransactionController extends Controller
 {
@@ -16,11 +17,11 @@ class TransactionController extends Controller
     /**
      * Get transaction
      *
-     * get current user's trasactions
+     * get current user's transactions
      *
-     * @param Request $request 
+     * @param Request $request
      * @return JsonResponse
-     * @throws exception
+     * @throws \Exception
      **/
     public function index(Request $request): JsonResponse
     {
@@ -40,7 +41,7 @@ class TransactionController extends Controller
      *
      * Create new trasanction current user
      *
-     * @param Request $request 
+     * @param Request $request
      * @return JsonResponse
      * @throws exception
      **/
@@ -93,6 +94,12 @@ class TransactionController extends Controller
             $to_account = $request->user()->accounts()->where('ulid', $request->to_account_ulid)->first();
 
             $from_account_amount = $from_account->balance - $request->amount;
+            if ($from_account_amount < 0) {
+                return response()->json([
+                    'message' => 'Low balance in account',
+                    'result'  => []
+                ], 400);
+            }
             $to_account_amount = $to_account->balance + $request->amount;
 
             $from_account->update([
